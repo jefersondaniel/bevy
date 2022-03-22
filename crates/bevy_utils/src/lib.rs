@@ -1,5 +1,8 @@
 pub use ahash::AHasher;
 use ahash::RandomState;
+#[cfg(any(not(target_arch = "wasm32"), target_os = "emscripten"))]
+pub use std::time::{Instant, Duration};
+#[cfg(all(target_arch = "wasm32", not(target_os = "emscripten")))]
 pub use instant::{Duration, Instant};
 use std::{future::Future, pin::Pin};
 pub use tracing;

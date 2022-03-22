@@ -62,6 +62,7 @@ impl TaskPool {
         F: FnOnce(&mut Scope<'scope, T>) + 'scope + Send,
         T: Send + 'static,
     {
+
         let executor = &async_executor::LocalExecutor::new();
         let executor: &'scope async_executor::LocalExecutor<'scope> =
             unsafe { mem::transmute(executor) };
@@ -97,9 +98,16 @@ impl TaskPool {
     where
         T: 'static,
     {
-        wasm_bindgen_futures::spawn_local(async move {
-            future.await;
-        });
+        #[cfg(any(not(target_arch = "wasm32"), target_os = "emscripten"))]
+        {
+            futures_lite::future::block_on(future);
+        }
+        #[cfg(all(target_arch = "wasm32", not(target_os = "emscripten")))]
+        {
+            wasm_bindgen_futures::spawn_local(async move {
+                future.await;
+            });
+        }
         FakeTask
     }
 
